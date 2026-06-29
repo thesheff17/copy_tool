@@ -83,7 +83,6 @@ def copy_with_progress(source_dir, dest_dir):
     files_copied = 0
     link_printed = False  # Track if the timer link has been displayed
     script_start_time = time.time()  # Captures the start of the copy process
-    start_time = time.time()
 
     for src_f, dst_f, f_size in files_to_copy:
         try:
@@ -101,7 +100,7 @@ def copy_with_progress(source_dir, dest_dir):
             
             # Calculations
             percentage = (bytes_copied / total_size) * 100 if total_size > 0 else 100
-            elapsed_time = time.time() - start_time
+            elapsed_time = time.time() - script_start_time
             
             # ETA based on processing time per file
             if files_copied > 0:
