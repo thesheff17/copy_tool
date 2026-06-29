@@ -170,17 +170,17 @@ def copy_with_progress(source_dir, dest_dir):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="A lightweight CLI tool to copy directories with a live progress bar, file counters, and ETA."
+        description="copy files from A to B with estimated elasped time."
     )
     parser.add_argument(
         "source", 
         type=str, 
-        help="The path to the source directory (Folder A) that you want to copy."
+        help="The path to the source directory you want to copy files from."
     )
     parser.add_argument(
         "destination", 
         type=str, 
-        help="The path to the destination directory (Folder B) where files will be saved."
+        help="The destination directory to copy files to."
     )
 
     args = parser.parse_args()
