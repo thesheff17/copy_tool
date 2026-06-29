@@ -16,6 +16,30 @@ JSON_LOG = True
 # by default this is off
 GOOGLE_TIMER_LINK = False
 
+def append_to_json_file(data, filename):
+    # 1. Initialize an empty list if the file doesn't exist or is empty
+    file_data = []
+    
+    if os.path.exists(filename) and os.path.getsize(filename) > 0:
+        with open(filename, "r") as file:
+            try:
+                file_data = json.load(file)
+            except json.JSONDecodeError:
+                # Handle the case where the file has corrupted/invalid JSON
+                print(f"Warning: {filename} contained invalid JSON. Overwriting.")
+                file_data = []
+
+    # 2. Append your new data (assumes the root of your JSON is a list)
+    if isinstance(file_data, list):
+        file_data.append(data)
+    else:
+        # If the file exists but root is a dict, convert it or handle accordingly
+        file_data = [file_data, data]
+
+    # 3. Write the entire updated list back to the file
+    with open(filename, "w") as file:
+        json.dump(file_data, file, indent=4)
+
 def copy_with_progress(source_dir, dest_dir):
     if source_dir.endswith("/"):
         source_dir = source_dir[0:-1]
@@ -160,13 +184,7 @@ def copy_with_progress(source_dir, dest_dir):
             "final_speed_mb_s": round(speed_mb_s, 2),
             "total_time_seconds": round(total_elapsed_time, 2)
         }
-        
-        log_file_path = "copy_tool.json"
-        try:
-            with open(log_file_path, "a", encoding="utf-8") as f:
-                json.dump(log_data, f, indent=4)
-        except Exception as e:
-            print(f"Error writing log file: {e}")
+        append_to_json_file(log_data, "copy_tool.json")
 
 def main():
     parser = argparse.ArgumentParser(
