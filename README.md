@@ -64,6 +64,8 @@ copying file: file2.txt  | 98.7% | copied: 76/76 (0 file(s) left) | estimated ti
 
 copy_tool.py completed. copied: 76 out of 76 files in 1 minute(s) 23 second(s) copy speed: 1039.84 MB/s.
 ```
+# What operating systems have I tested this on?
+This should work with any linux device with python 3.12 and up.  I mainly test on ubuntu and debian.  I haven't tested on windows but I don't see why it wouldn't work.  If see issues make a PR.
 
 # see an issue or need to discuss a feature/problem?
 Please open a post in [discussions.](https://github.com/thesheff17/copy_tool/discussions) 
