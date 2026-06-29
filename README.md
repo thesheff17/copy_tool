@@ -49,7 +49,7 @@ After 10% of the copy is completed and the `GOOGLE_TIMER_LINK` is set to `True` 
 From my experience networks are all over the place on speed.  What really matters in the end is Mb/s over some time frame.  Lots of times I see dips to 120Mb/s but then the copy resumes faster speeds without the Mb/s counter being updated.  In the end I just care about total time and Mb/s over that time frame.
 
 # what does the output look like:
-```bash
+```
 ./copy_tool.py /mnt/ssd01 /home/ubuntu/copydest
 copy_tool.py started...
 scanning source directory and calculating total size of files. please wait...
