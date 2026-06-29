@@ -1,11 +1,11 @@
 # copy tool
-As data storage requirements explode, we need a better copy file tool.  Really the answer is just start the copy and monitor the elasped total time and see if the time is acceptable.  If the total elapsed time is not acceptable, cancel the copy and re-evaluate.  
+As data storage requirements explode, I would like a better copy program.
 
 # why python
 I feel python is one of the better langauges for reading, writing, and terminal output.  You should always understand the code you are running.  You should look at [copy_tool.py](https://github.com/thesheff17/copy_tool/blob/main/copy_tool.py) before you run anything in this repo.
 
 # python 3rd party packages
-My initial version used the `tqdm` package to calc and make a progress bar.  While I liked this I didn't like the idea of having a 3rd party dependency for people to use this script.  I want you to be able to wget/curl this file or just copy/paste and it works.  I have decided not include any 3rd party packages going forward.  This script really should work on any version of python3.12 and up.
+My initial version used the `tqdm` package to calc and make a progress bar.  While I liked this I didn't like the idea of having a 3rd party dependency for people to use this script.  I want you to be able to wget/curl this file or just copy/paste and it works.  I have decided not include any 3rd party packages going forward.  This script really should work on any version of python 3.12 and up.
 
 # why did I write this tool? isn't there a bunch of copy tools out there?
 Yes there are endless copy tools.  I wanted something I wrote myself and tested myself.  I also wanted it in a simple language like python so if it needed to be extended to other projects it can be.  I also wanted something as simple as possible to monitor elasped time.  All these copy tools out there (scp, rsync, cp, etc) have very limited support for total elasped time.
@@ -43,7 +43,7 @@ sudo mount \
 At first I had this calc based on the number of bytes but this was all over the place.  I decided to just estimate this on the number of files copied over time vs files remaining to copy.  Note this is NOT 100% accurate.
 
 # How is the google timer link calculated?
-After 10% of the copy is complete the program will print out a timer link + 5 min.  This way you can easily go to this link and the timer will go off after x time.  I found most of the time + 5 min on these scripts the copy is usually completed.  Note this is NOT 100% accurate.  If you find out your timer is going off before the copy is done you can adjust the 5 min offset or/and try to adjust the 10% threshold variables.  The 5 min can easily be bumped to 10-15 min if needed.
+After 10% of the copy is completed and the `GOOGLE_TIMER_LINK` is set to `True` the program will print out a timer link + 5 min.  This way you can easily go to this link and the timer will go off after x time.  I found most of the time + 5 min on these scripts the copy is usually completed.  Note this is NOT 100% accurate.  If you find out your timer is going off before the copy is done you can adjust the 5 min offset or/and try to adjust the 10% threshold variables.  The 5 min can easily be bumped to 10-15 min if needed.
 
 # Why not try to display Mb/s during the transfer?
 From my experience networks are all over the place on speed.  What really matters in the end is Mb/s over some time frame.  Lots of times I see dips to 120Mb/s but then the copy resumes faster speeds without the Mb/s counter being updated.  In the end I just care about total time and Mb/s over that time frame.
