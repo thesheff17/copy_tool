@@ -2,7 +2,7 @@
 As data storage requirements explode, we need a better copy file tool.  Really the answer is just start the copy and monitor the elasped total time and see if the time is acceptable.  If the total elapsed time is not acceptable, cancel the copy and re-evaluate.  
 
 # why python
-I feel python is one of the better langauges for reading, writing, and terminal output.  You should always understand the code you are running.  You should look at [copy_tool.py](https://github.com/thesheff17/copy_tool/copy_tool.py) before you run anything in this repo.
+I feel python is one of the better langauges for reading, writing, and terminal output.  You should always understand the code you are running.  You should look at [copy_tool.py](https://github.com/thesheff17/copy_tool/blob/main/copy_tool.py) before you run anything in this repo.
 
 # python 3rd party packages
 My initial version used the `tqdm` package to calc and make a progress bar.  While I liked this I didn't like the idea of having a 3rd party dependency for people to use this script.  I want you to be able to wget/curl this file or just copy/paste and it works.  I have decided not include any 3rd party packages going forward.  This script really should work on any version of python3.12 and up.
@@ -16,10 +16,10 @@ Yes there are endless copy tools.  I wanted something I wrote myself and tested 
 mkdir -p ~/DESTDIR
 
 # wget
-wget https://github.com/thesheff17/copy_tool/copy_tool.py
+wget https://github.com/thesheff17/copy_tool/blob/main/copy_tool.py
 
 # curl
-curl -o copy_tool.py https://github.com/thesheff17/copy_tool/copy_tool.py
+curl -o copy_tool.py https://github.com/thesheff17/copy_tool/blob/main/copy_tool.py
 
 # run script: pass directories without trailing slash
 chmod +x ./copy_tool.py
