@@ -16,10 +16,10 @@ Yes there are endless copy tools.  I wanted something I wrote myself and tested 
 mkdir -p ~/DESTDIR
 
 # wget
-wget https://github.com/thesheff17/copy_tool/blob/main/copy_tool.py
+wget https://raw.githubusercontent.com/thesheff17/copy_tool/refs/heads/main/copy_tool.py
 
 # curl
-curl -o copy_tool.py https://github.com/thesheff17/copy_tool/blob/main/copy_tool.py
+curl -o copy_tool.py https://raw.githubusercontent.com/thesheff17/copy_tool/refs/heads/main/copy_tool.py
 
 # run script: pass directories without trailing slash
 chmod +x ./copy_tool.py
