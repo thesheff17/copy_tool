@@ -1,19 +1,9 @@
 # copy tool
 As data storage requirements explode, I would like a better copy program.
 
-# why python
-I feel python is one of the better langauges for reading, writing, and terminal output.  You should always understand the code you are running.  You should look at [copy_tool.py](https://github.com/thesheff17/copy_tool/blob/main/copy_tool.py) before you run anything in this repo.
-
-# python 3rd party packages
-My initial version used the `tqdm` package to calc and make a progress bar.  While I liked this I didn't like the idea of having a 3rd party dependency for people to use this script.  I want you to be able to wget/curl this file or just copy/paste and it works.  I have decided not include any 3rd party packages going forward.  This script really should work on any version of python 3.12 and up.
-
-# why did I write this tool? isn't there a bunch of copy tools out there?
-Yes there are endless copy tools.  I wanted something I wrote myself and tested myself.  I also wanted it in a simple language like python so if it needed to be extended to other projects it can be.  I also wanted something as simple as possible to monitor elasped time.  All these copy tools out there (scp, rsync, cp, etc) have very limited support for total elasped time.
-
-# how to use:
+# TLDR
 ```bash
-# create your DESTDIR
-mkdir -p ~/DESTDIR
+mkdir ~/destdir/
 
 # wget
 wget https://raw.githubusercontent.com/thesheff17/copy_tool/refs/heads/main/copy_tool.py
@@ -21,10 +11,19 @@ wget https://raw.githubusercontent.com/thesheff17/copy_tool/refs/heads/main/copy
 # curl
 curl -o copy_tool.py https://raw.githubusercontent.com/thesheff17/copy_tool/refs/heads/main/copy_tool.py
 
-# run script: pass directories without trailing slash
+# run tool: provide source directory and destination directory
 chmod +x ./copy_tool.py
-./copy_tool.py /mnt/drive01 /home/ubuntu/copydest
+./copy_tool src_directory ~/destdir
 ```
+
+# why python
+I feel python is one of the better langauges for reading, writing, and terminal output.  You should always understand the code you are running.  You should look at [copy_tool.py](https://github.com/thesheff17/copy_tool/blob/main/copy_tool.py) before you run anything in this repo.
+
+# python 3rd party packages
+I'm going to try to keep this script only using the standard library.  I don't want people dealing with pip installs or other things like virtualenvs to run a copy tool.  I want people to able to curl/wget this script and be using it.
+
+# why did I write this tool? isn't there a bunch of copy tools out there?
+Yes there are endless copy tools.  I wanted something I wrote myself and tested myself.  I also wanted it in a simple language like python so if it needed to be extended to other projects it can be.  I also wanted something as simple as possible to monitor elasped time and the copy.  All these copy tools out there (scp, rsync, cp, etc) have very limited support for total elasped time. I also generate `copy_tool.json` with the results.  Further analysis can we used to calc average of the copy speed over mutiple runs with this file.  I also wanted a script you are never prompted for further input.  If it can do the copy from A -> B it is going to do it.
 
 # how do I use this over a network?
 I use [samba](https://en.wikipedia.org/wiki/Samba_(software)) + CIFS to mount directories.  samba supports SMB multi channel setups.
@@ -39,34 +38,93 @@ sudo mount \
   /mnt/drive01
   ```
 
-# how is estimated min:sec remaining work?
-At first I had this calc based on the number of bytes but this was all over the place.  I decided to just estimate this on the number of files copied over time vs files remaining to copy.  Note this is NOT 100% accurate.
+I have been testing a bunch of `smb.conf` settings.  This is what I change so far:
+```
+  # performance tuning
+  # Enable SMB3 Multi-Channel
+  server multi channel support = yes
 
-# How is the google timer link calculated?
-After 10% of the copy is completed and the `GOOGLE_TIMER_LINK` is set to `True` the program will print out a timer link + 5 min.  This way you can easily go to this link and the timer will go off after x time.  I found most of the time + 5 min on these scripts the copy is usually completed.  Note this is NOT 100% accurate.  If you find out your timer is going off before the copy is done you can adjust the 5 min offset or/and try to adjust the 10% threshold variables.  The 5 min can easily be bumped to 10-15 min if needed.
+   # Require SMB2 or higher (Multi-Channel only works with SMB2/3)
+   server min protocol = SMB2
+   # server max protocol = SMB3
 
-# Why not try to display Mb/s during the transfer?
-From my experience networks are all over the place on speed.  What really matters in the end is Mb/s over some time frame.  Lots of times I see dips to 120Mb/s but then the copy resumes faster speeds without the Mb/s counter being updated.  In the end I just care about total time and Mb/s over that time frame.
+   # Signing - required for Multi-Channel per the spec
+   # Can be "auto", "mandatory", or "disabled"
+   # "auto" allows negotiation - clients will use it
+   server signing = auto
 
+   # Bind Samba to specific interfaces
+   # List the interfaces you want Samba to advertise and listen on
+   interfaces = lo eth0 eth1
+   # interfaces = lo eth0
+   bind interfaces only = yes
+
+   # Performance tuning
+   socket options = TCP_NODELAY IPTOS_LOWDELAY SO_RCVBUF=131072 SO_SNDBUF=131072
+   read raw = yes
+   write raw = yes
+   max xmit = 65535
+   dead time = 15
+
+   use sendfile = yes
+   aio read size = 1
+   aio write size = 1
+   ```
 # what does the output look like:
 ```
-./copy_tool.py /mnt/ssd01 /home/ubuntu/copydest
+./copy_tool.py /mnt/ssdlocal/ /home/ubuntu/copydest/
 copy_tool.py started...
 scanning source directory and calculating total size of files. please wait...
-Found 76 files to copy (87,062.67 MB).
+Found 6 files to copy (91,221.97 MB).
 
-copying file: file1.txt  | 9.2% | copied: 8/76 (68 file(s) left) | estimated time remaining: 01M:04S
+copying file: file1.txt        file size: 32,734 MB  | 0.0% estimated: 0.61 MB/s | copied: 2/6 (4 file(s) left) | waiting on 33% of files to be copied: --:--
 
-[10% completed] timer link:
+timer link:
 https://www.google.com/search?q=timer+for+6+minutes
 
-copying file: file2.txt  | 98.7% | copied: 76/76 (0 file(s) left) | estimated time remaining: 00M:00S
+copying file: file2.txt         file size: 0 MB  | 100.0% estimated: 668.59 MB/s | copied: 6/6 (0 file(s) left) | estimated total time remaining: 00M:00S
 
-copy_tool.py completed. copied: 76 out of 76 files in 1 minute(s) 23 second(s) copy speed: 1039.84 MB/s.
+copy_tool.py completed. copied: 6 out of 6 files in 2 minute(s) 16 second(s) copy speed: 668.54 MB/s.
 ```
-# What operating systems have I tested this on?
-This should work with any linux device with python 3.12 and up.  I mainly test on ubuntu and debian.  I haven't tested on windows but I don't see why it wouldn't work.  If see issues make a PR.
 
+# how does this compare to `scp` 
+I consistently get a little better speeds with the same data.  I'm not sure if it is the tuning with samba multi channel support or something else.  I'm going to keep testing.  Even if it is a little bit slower I like this script so much more.
+
+```
+copy_tool.py completed. copied: 6 out of 6 files in 2 minute(s) 16 second(s) copy speed: 668.54 MB/s.
+
+scp was: 2m53.703s
+```
+
+# how can you tell if you are using samba multi channel support correctly? 
+On the client I run.  Then I take a look at output.txt 
+
+```
+sudo cat /proc/fs/cifs/DebugData > output.txt
+
+# output.txt sampe:
+
+        Server interfaces: 4    Last updated: 603 seconds ago
+        1)      Speed: 10Gbps
+                Capabilities: rss
+                IPv4: 192.168.1.11
+                Weight (cur,total): (3,10)
+                Allocated channels: 3
+                [CONNECTED]
+
+        2)      Speed: 10Gbps
+                Capabilities: rss
+                IPv4: 192.168.1.10
+                Weight (cur,total): (1,10)
+                Allocated channels: 1
+                [CONNECTED]
+```
+
+- I also have set this variable based on recommendations. 
+- Replace your interface name with the name below
+```
+sudo ethtool -L eth0 combined 6
+```
 # see an issue or need to discuss a feature/problem?
 Please open a post in [discussions.](https://github.com/thesheff17/copy_tool/discussions) 
 

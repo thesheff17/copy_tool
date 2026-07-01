@@ -16,6 +16,36 @@ JSON_LOG = True
 # by default this is off
 GOOGLE_TIMER_LINK = False
 
+def sendfile_copy(src_path, dst_path):
+    """
+    Copies a file from src_path to dst_path using the high-performance,
+    zero-copy os.sendfile() system call.
+    """
+    # 1. Open the source file for reading and destination for writing (in binary mode)
+    with open(src_path, 'rb') as f_src:
+        with open(dst_path, 'wb') as f_dst:
+            
+            # 2. Get the underlying OS file descriptors
+            fd_in = f_src.fileno()
+            fd_out = f_dst.fileno()
+            
+            # 3. Determine the total size of the source file
+            file_size = os.fstat(fd_in).st_size
+            
+            # 4. Loop until the entire file is transferred
+            offset = 0
+            while offset < file_size:
+                # sendfile(out, in, offset, count)
+                # It returns the number of bytes actually sent in this call
+                bytes_sent = os.sendfile(fd_out, fd_in, offset, file_size - offset)
+                
+                if bytes_sent == 0:
+                    # If 0 bytes are sent, we've hit an unexpected EOF
+                    break
+                
+                # Move the offset forward by the amount of data processed
+                offset += bytes_sent
+
 def append_to_json_file(data, filename):
     # 1. Initialize an empty list if the file doesn't exist or is empty
     file_data = []
@@ -83,6 +113,13 @@ def copy_with_progress(source_dir, dest_dir):
     files_copied = 0
     link_printed = False  # Track if the timer link has been displayed
     script_start_time = time.time()  # Captures the start of the copy process
+    flip_display = True # This helps control some output below
+
+    # use this to calc 1/3 of the files.  I will wait to estimate total time until this is set.
+    one_third_files = round(total_files / 3)
+    if one_third_files == 0:
+        one_third_files = 1
+
 
     for src_f, dst_f, f_size in files_to_copy:
         try:
@@ -101,20 +138,29 @@ def copy_with_progress(source_dir, dest_dir):
             # Calculations
             percentage = (bytes_copied / total_size) * 100 if total_size > 0 else 100
             elapsed_time = time.time() - script_start_time
+
+            # Calculate current speed in MB/s
+            if elapsed_time > 0:
+                speed_mb_s = (bytes_copied / (1024**2)) / elapsed_time
+                speed_str = f"{speed_mb_s:.2f} MB/s"
+            else:
+                speed_str = "0.00 MB/s"
             
-            # ETA based on processing time per file
-            if files_copied > 0:
-                time_per_file = elapsed_time / files_copied
-                eta_seconds = files_remaining * time_per_file
+            # ETA based on data throughput over time.  We wait till 1/3 files copied.
+            if bytes_copied > 0 and elapsed_time > 0 and files_copied > one_third_files:
+                bytes_per_second = bytes_copied / elapsed_time
+                bytes_remaining = total_size - bytes_copied
+                eta_seconds = bytes_remaining / bytes_per_second
                 eta_minutes, eta_seconds = divmod(int(eta_seconds), 60)
                 eta_str = f"{eta_minutes:02d}M:{eta_seconds:02d}S"
+                flip_display = False
             else:
                 eta_str = "--:--"
 
 
             if GOOGLE_TIMER_LINK:
                 # Print Google Timer link once after crossing 10% completion
-                if percentage >= 10.0 and not link_printed:
+                if files_copied > one_third_files and not link_printed:
                     
                     # adding + 5 min
                     timer_total_min = int(eta_minutes) + 5
@@ -123,21 +169,34 @@ def copy_with_progress(source_dir, dest_dir):
                     google_url = f"https://www.google.com/search?q=timer+for+{timer_total_min}+minutes"
                     
                     # Printing a newline breaks the overwrite cycle cleanly so the link stays visible
-                    print(f"\n\n[10% completed] timer link:\n{google_url}\n")
+                    print(f"\n\ntimer link:\n{google_url}\n")
                     link_printed = True
 
-            # what you see on the terminal
-            status_line = (
-                f"\rcopying file: {current_file_name:<20} | "
-                f"{percentage:.1f}% | "
-                f"copied: {files_copied:,}/{total_files:,} ({files_remaining:,} file(s) left) | "
-                f"estimated time remaining: {eta_str}\033[K"
-            )
+            # display Mb size of file:
+            file_mb = (f_size / (1024**2))
+
+            if flip_display:
+            # what you see on the terminal before 33% files are copied
+                status_line = (
+                    f"\rcopying file: {current_file_name:<20} file size: {file_mb:,.0f} MB  | "
+                    f"{percentage:.1f}% estimated: {speed_str} | "
+                    f"copied: {files_copied:,}/{total_files:,} ({files_remaining:,} file(s) left) | "
+                    f"waiting on 33% of files to be copied: {eta_str}\033[K"
+                )
+            else:
+                status_line = (
+                    f"\rcopying file: {current_file_name:<20} file size: {file_mb:,.0f} MB  | "
+                    f"{percentage:.1f}% estimated: {speed_str} | "
+                    f"copied: {files_copied:,}/{total_files:,} ({files_remaining:,} file(s) left) | "
+                    f"estimated total time remaining: {eta_str}\033[K"
+                )
+
             sys.stdout.write(status_line)
             sys.stdout.flush()
 
             # Execute copy operation
-            shutil.copy2(src_f, dst_f)
+            # shutil.copy2(src_f, dst_f)
+            sendfile_copy(src_f, dst_f)
             bytes_copied += f_size
             
         except Exception as e:
